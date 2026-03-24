@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İş İlanı Analiz Aracı</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1, h2 { color: #333; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover { background: #45a049; }
+        #sonuc {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .gecmis-kart {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .gecmis-kart h3 {
+            margin: 0 0 5px 0;
+            color: #444;
+        }
+        .gecmis-kart .tarih {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        .gecmis-kart .sonuc {
+            white-space: pre-wrap;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>İş İlanı Analiz Aracı</h1>
+    
+    <input type="text" id="baslik" placeholder="İş ilanı başlığı (örn: Python Developer)">
+    <input type="text" id="sirket" placeholder="Şirket adı">
+    <textarea id="aciklama" rows="5" placeholder="İş ilanı açıklaması..."></textarea>
+    
+    <button onclick="analiz()">Analiz Et</button>
+    
+    <div id="sonuc"></div>
+
+    <h2>Geçmiş Analizler</h2>
+    <div id="gecmis"></div>
+
+    <script>
+        async function analiz() {
+            const baslik = document.getElementById("baslik").value;
+            const sirket = document.getElementById("sirket").value;
+            const aciklama = document.getElementById("aciklama").value;
+
+            const sonucDiv = document.getElementById("sonuc");
+            sonucDiv.style.display = "block";
+            sonucDiv.textContent = "Analiz yapılıyor...";
+
+            const response = await fetch("/ilan-analiz", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ baslik, sirket, aciklama })
+            });
+
+            const data = await response.json();
+            sonucDiv.textContent = data.analiz || data.hata;
+            
+            gecmisYukle();
+        }
+
+        async function gecmisYukle() {
+            const response = await fetch("/gecmis");
+            const data = await response.json();
+            
+            const gecmisDiv = document.getElementById("gecmis");
+            gecmisDiv.innerHTML = "";
+            
+            data.forEach(item => {
+                gecmisDiv.innerHTML += `
+                    <div class="gecmis-kart">
+                        <h3>${item.baslik} — ${item.sirket}</h3>
+                        <div class="tarih">${new Date(item.tarih).toLocaleString("tr-TR")}</div>
+                        <div class="sonuc">${item.sonuc}</div>
+                    </div>
+                `;
+            });
+        }
+
+        gecmisYukle();
+    </script>
+</body>
+</html>
+
