@@ -18,8 +18,3 @@ https://job-analyze.onrender.com/static/index.html
 4. `uvicorn main:app --reload`
 ```
 
-Kaydet ve GitHub'a yükle:
-```
-git add .
-git commit -m "README eklendi"
-git push
