@@ -9,12 +9,17 @@ https://job-analyze.onrender.com/static/index.html
 - Python + FastAPI
 - Google Gemini AI
 - SQLite + SQLAlchemy
+- JWT Authentication
 - HTML/CSS/JavaScript
 
-## ⚙️ Kurulum
+## ⚙️ Özellikler
+- Kullanıcı kayıt ve giriş sistemi
+- JWT token ile güvenli API
+- Her kullanıcı sadece kendi analizlerini görür
+- Geçmiş analizler kaydedilir
+
+## 🔧 Kurulum
 1. Repoyu klonla
 2. `pip install -r requirements.txt`
 3. `.env` dosyası oluştur: `GEMINI_API_KEY=your_key`
 4. `uvicorn main:app --reload`
-```
-
