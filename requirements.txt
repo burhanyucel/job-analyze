@@ -4,3 +4,8 @@ pydantic
 python-dotenv
 sqlalchemy
 google-genai
+python-jose[cryptography]
+passlib
+bcrypt<5
+python-multipart
+email-validator
