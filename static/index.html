@@ -31,16 +31,39 @@
             cursor: pointer;
             font-size: 16px;
             margin-top: 10px;
+            margin-right: 10px;
         }
         button:hover { background: #45a049; }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover { background: #1976D2; }
+        button.danger {
+            background: #f44336;
+        }
+        .kart {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        #mesaj {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+        .basari { background: #dff0d8; color: #3c763d; }
+        .hata { background: #f2dede; color: #a94442; }
         #sonuc {
-            margin-top: 20px;
             padding: 20px;
             background: white;
             border-radius: 6px;
             border: 1px solid #ddd;
             white-space: pre-wrap;
             display: none;
+            margin-top: 20px;
         }
         .gecmis-kart {
             background: white;
@@ -49,37 +72,119 @@
             border-radius: 6px;
             border: 1px solid #ddd;
         }
-        .gecmis-kart h3 {
-            margin: 0 0 5px 0;
-            color: #444;
-        }
-        .gecmis-kart .tarih {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 10px;
-        }
-        .gecmis-kart .sonuc {
-            white-space: pre-wrap;
-            font-size: 14px;
-            color: #555;
-        }
+        .gecmis-kart h3 { margin: 0 0 5px 0; color: #444; }
+        .gecmis-kart .tarih { font-size: 12px; color: #999; margin-bottom: 10px; }
+        .gecmis-kart .sonuc { white-space: pre-wrap; font-size: 14px; color: #555; }
+        #kullanici-bilgi { color: #666; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <h1>İş İlanı Analiz Aracı</h1>
-    
-    <input type="text" id="baslik" placeholder="İş ilanı başlığı (örn: Python Developer)">
-    <input type="text" id="sirket" placeholder="Şirket adı">
-    <textarea id="aciklama" rows="5" placeholder="İş ilanı açıklaması..."></textarea>
-    
-    <button onclick="analiz()">Analiz Et</button>
-    
-    <div id="sonuc"></div>
 
-    <h2>Geçmiş Analizler</h2>
-    <div id="gecmis"></div>
+    <!-- Auth Bölümü -->
+    <div id="auth-bolum" class="kart">
+        <h2 id="auth-baslik">Giriş Yap</h2>
+        <div id="mesaj"></div>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="sifre" placeholder="Şifre">
+        <button onclick="girisYap()">Giriş Yap</button>
+        <button class="secondary" onclick="kayitOl()">Kayıt Ol</button>
+    </div>
+
+    <!-- Ana Uygulama -->
+    <div id="uygulama" style="display:none">
+        <div id="kullanici-bilgi"></div>
+        <button class="danger" onclick="cikisYap()">Çıkış Yap</button>
+
+        <div class="kart" style="margin-top:20px">
+            <h2>İlanı Analiz Et</h2>
+            <input type="text" id="baslik" placeholder="İş ilanı başlığı (örn: Python Developer)">
+            <input type="text" id="sirket" placeholder="Şirket adı">
+            <textarea id="aciklama" rows="5" placeholder="İş ilanı açıklaması..."></textarea>
+            <button onclick="analiz()">Analiz Et</button>
+        </div>
+
+        <div id="sonuc"></div>
+
+        <h2>Geçmiş Analizler</h2>
+        <div id="gecmis"></div>
+    </div>
 
     <script>
+        let token = localStorage.getItem("token");
+        let email = localStorage.getItem("email");
+
+        if (token) {
+            goster();
+        }
+
+        function mesajGoster(metin, tip) {
+            const div = document.getElementById("mesaj");
+            div.textContent = metin;
+            div.className = tip;
+            div.style.display = "block";
+            setTimeout(() => div.style.display = "none", 3000);
+        }
+
+        function goster() {
+            document.getElementById("auth-bolum").style.display = "none";
+            document.getElementById("uygulama").style.display = "block";
+            document.getElementById("kullanici-bilgi").textContent = `Hoş geldin, ${email}`;
+            gecmisYukle();
+        }
+
+        async function girisYap() {
+            const emailVal = document.getElementById("email").value;
+            const sifreVal = document.getElementById("sifre").value;
+
+            const response = await fetch("/giris", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `username=${emailVal}&password=${sifreVal}`
+            });
+
+            const data = await response.json();
+
+            if (data.access_token) {
+                localStorage.setItem("token", data.access_token);
+                localStorage.setItem("email", emailVal);
+                token = data.access_token;
+                email = emailVal;
+                goster();
+            } else {
+                mesajGoster("Email veya şifre yanlış", "hata");
+            }
+        }
+
+        async function kayitOl() {
+            const emailVal = document.getElementById("email").value;
+            const sifreVal = document.getElementById("sifre").value;
+
+            const response = await fetch("/kayit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailVal, sifre: sifreVal })
+            });
+
+            const data = await response.json();
+
+            if (data.mesaj) {
+                mesajGoster("Kayıt başarılı, giriş yapılıyor...", "basari");
+                await girisYap();
+            } else {
+                mesajGoster(data.detail || "Hata oluştu", "hata");
+            }
+        }
+
+        function cikisYap() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("email");
+            token = null;
+            email = null;
+            document.getElementById("auth-bolum").style.display = "block";
+            document.getElementById("uygulama").style.display = "none";
+        }
+
         async function analiz() {
             const baslik = document.getElementById("baslik").value;
             const sirket = document.getElementById("sirket").value;
@@ -91,23 +196,27 @@
 
             const response = await fetch("/ilan-analiz", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ baslik, sirket, aciklama })
             });
 
             const data = await response.json();
             sonucDiv.textContent = data.analiz || data.hata;
-            
             gecmisYukle();
         }
 
         async function gecmisYukle() {
-            const response = await fetch("/gecmis");
+            const response = await fetch("/gecmis", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
             const data = await response.json();
-            
             const gecmisDiv = document.getElementById("gecmis");
             gecmisDiv.innerHTML = "";
-            
+
             data.forEach(item => {
                 gecmisDiv.innerHTML += `
                     <div class="gecmis-kart">
@@ -118,8 +227,6 @@
                 `;
             });
         }
-
-        gecmisYukle();
     </script>
 </body>
 </html>
