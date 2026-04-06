@@ -3,7 +3,7 @@
 AI destekli iş ilanı analiz uygulaması. İş ilanını yapıştır, Gemini AI gerekli becerileri ve CV önerilerini analiz etsin.
 
 ## 🚀 Canlı Demo
-https://job-analyze.onrender.com/static/index.html
+https://job-analyze.onrender.com
 
 ## 🛠 Teknolojiler
 - Python + FastAPI
